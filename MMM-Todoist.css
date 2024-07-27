@@ -95,18 +95,18 @@
     overflow: hidden;
 }
 
-input[type="checkbox"] {
+.todoCheckbox {
 	height: 0px;
 	width: 0px;
 }
-input[type="checkbox"] ~ label {
+.todoCheckbox ~ label {
 	border: 1px solid transparent;
 	border-radius: 2px;
 }
-input:checked ~ label {
+.todoCheckbox:checked ~ label {
 	text-decoration: 2px line-through;
 }
-input:focus ~ label {
+.todoCheckbox:focus ~ label {
 	border: 1px solid rgb(65, 83, 175);
 	background: rgba(255, 255, 255, 0.2);
 }

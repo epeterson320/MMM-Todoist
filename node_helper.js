@@ -11,6 +11,7 @@
 const NodeHelper = require("node_helper");
 const request = require("request");
 const showdown = require("showdown");
+const { randomUUID } = require('node:crypto');
 
 const markdown = new showdown.Converter();
 
@@ -21,12 +22,13 @@ module.exports = NodeHelper.create({
 
 	socketNotificationReceived: function(notification, payload) {
 		if (notification === "FETCH_TODOIST") {
-			this.config = payload;
-			this.fetchTodos();
+			const { completedTodoIDs, ...config } = payload;
+			this.config = config;
+			this.syncTodos(completedTodoIDs);
 		}
 	},
 
-	fetchTodos : function() {
+	syncTodos : function(completedTodoIDs = []) {
 		var self = this;
 		//request.debug = true;
 		var acessCode = self.config.accessToken;
@@ -40,8 +42,13 @@ module.exports = NodeHelper.create({
 			},
 			form: {
 				sync_token: "*",
-				resource_types: self.config.todoistResourceType
-			}
+				resource_types: self.config.todoistResourceType,
+				commands: JSON.stringify(completedTodoIDs.map((id) => ({
+					type: "item_complete",
+					uuid: randomUUID(),
+					args: { id },
+				}))),
+			},
 		},
 		function(error, response, body) {
 			if (error) {

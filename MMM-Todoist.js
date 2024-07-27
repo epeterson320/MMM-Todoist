@@ -132,12 +132,18 @@ Module.register("MMM-Todoist", {
 		this.userList = typeof this.config.projects !== "undefined" ?
 			JSON.parse(JSON.stringify(this.config.projects)) : [];
 
-		this.sendSocketNotification("FETCH_TODOIST", this.config);
+		this.sync();
 
 		//add ID to the setInterval function to be able to stop it later on
 		this.updateIntervalID = setInterval(function () {
-			self.sendSocketNotification("FETCH_TODOIST", self.config);
+			self.sync();
 		}, this.config.updateInterval);
+	},
+
+	sync: function () {
+		const completedTodoElementNodelist = document.querySelectorAll(".todoCheckbox:checked");
+		const completedTodoIDs = Array.from(completedTodoElementNodelist).map(el => el.id.slice(5));
+		this.sendSocketNotification("FETCH_TODOIST", { ...this.config, completedTodoIDs });
 	},
 
 	suspend: function () { //called by core system when the module is not displayed anymore on the screen
@@ -165,13 +171,13 @@ Module.register("MMM-Todoist", {
 			var self = this;
 
 			// update now
-			this.sendSocketNotification("FETCH_TODOIST", this.config);
+			this.sync();
 
 			//if no IntervalID defined, we set one again. This is to avoid several setInterval simultaneously
 			if (this.updateIntervalID === 0) {
 
 				this.updateIntervalID = setInterval(function () {
-					self.sendSocketNotification("FETCH_TODOIST", self.config);
+					self.sync();
 				}, this.config.updateInterval);
 			}
 
@@ -603,9 +609,20 @@ Module.register("MMM-Todoist", {
 		return cell;
 	},
 	addCheckbox: function(item) {
+		const self = this;
 		var checkbox = document.createElement("input");
 		checkbox.type = "checkbox";
+		checkbox.className = "todoCheckbox"
 		checkbox.id = `item-${item.id}`;
+		// Whenever an item is checked or unchecked, schedule a sync in 2 seconds,
+		// and reset the periodic update.
+		checkbox.addEventListener('change', (() => {
+			clearInterval(self.updateIntervalID);
+			clearTimeout(self.changeTimeoutID);
+			self.updateIntervalID = setInterval(function () { self.sync(); }, self.config.updateInterval);
+			self.changeTimeoutID = setTimeout(function() { self.sync(); }, 2000);
+		}));
+
 		return checkbox;
 	},
 	getDom: function () {
@@ -665,7 +682,7 @@ Module.register("MMM-Todoist", {
 
 			divBody.appendChild(divRow);
 		});
-		
+
 		divTable.appendChild(divBody);
 		wrapper.appendChild(divTable);
 
