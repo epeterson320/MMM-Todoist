@@ -505,8 +505,13 @@ Module.register("MMM-Todoist", {
 			// this item is a subtask so indent it
 			taskText = '- ' + taskText;
 		}
-		return this.createCell("title bright alignLeft", 
-			this.shorten(taskText, this.config.maxTitleLength, this.config.wrapEvents));
+		var shortText = this.shorten(taskText, this.config.maxTitleLength, this.config.wrapEvents);
+
+		var cell = document.createElement("label");
+		cell.className = "divTableCell title bright alignLeft"
+		cell.innerHTML = shortText;
+		cell.htmlFor = `item-${item.id}`;
+		return cell;
 
 		// return this.createCell("title bright alignLeft", item.content);
 	},
@@ -597,6 +602,12 @@ Module.register("MMM-Todoist", {
 
 		return cell;
 	},
+	addCheckbox: function(item) {
+		var checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.id = `item-${item.id}`;
+		return checkbox;
+	},
 	getDom: function () {
 	
 		if (this.config.hideWhenEmpty && this.tasks.items.length===0) {
@@ -638,10 +649,10 @@ Module.register("MMM-Todoist", {
 			//Add the Row
 			divRow.className = "divTableRow";
 			
-
 			//Columns
 			divRow.appendChild(this.addPriorityIndicatorCell(item));
 			divRow.appendChild(this.addColumnSpacerCell());
+			divRow.appendChild(this.addCheckbox(item));
 			divRow.appendChild(this.addTodoTextCell(item));
 			divRow.appendChild(this.addDueDateCell(item));
 			if (this.config.showProject) {
