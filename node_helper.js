@@ -44,7 +44,7 @@ module.exports = NodeHelper.create({
 				sync_token: "*",
 				resource_types: self.config.todoistResourceType,
 				commands: JSON.stringify(completedTodoIDs.map((id) => ({
-					type: "item_complete",
+					type: "item_close",
 					uuid: randomUUID(),
 					args: { id },
 				}))),
